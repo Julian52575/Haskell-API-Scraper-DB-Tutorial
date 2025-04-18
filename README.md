@@ -14,7 +14,7 @@ Haskell is a programming language that is:
 - Optimized: Comparable to C or C++.
 
 ### Why haskell ?
-Haskell makes both fast and very-realible APIs.
+Haskell is both fast and very-reliable, making it perfect for web services such as APIs.
 
 ---
 ## Dependencies
