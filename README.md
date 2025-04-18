@@ -40,3 +40,21 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
   - Connecting.
   - Reading data.
   - Writing data.
+
+## Project structure
+
+```
+.
+├── app         -- Application source code
+│   └── Main.hs
+|   └── ...     
+├── CHANGELOG.md
+├── Haskell-API-Tutorial.cabal  -- The project's configuration file
+├── LICENSE
+├── README.md
+├── src          -- Library source code
+│   └── MyLib.hs
+├── test         -- Library tests
+    └── Main.hs
+└── ...
+```
