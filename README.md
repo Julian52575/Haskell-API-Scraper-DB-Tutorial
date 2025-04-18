@@ -1,4 +1,4 @@
-# Haskell-API-Tutorial
+# Haskell API Tutorial
 Learn how to build your own haskell REST API.  
 Feel free to jump arround from task to task and use this repository as a reference for your own project ~I know ChatGPT will~.
 
@@ -27,7 +27,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 > `Postman` will help you test your routes !
 
 ## What you will learn
-- Reading environment variable and make it accessible to your app.
+- [Reading environment variable and making it accessible to your app](#Reading-environment-variable) 
 - Creating a server to interact with your clients:
   - Setting up the server.
   - Setting up a route.
@@ -58,3 +58,33 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
     └── Main.hs
 └── ...
 ```
+---
+# The Tutorial
+---
+## Reading environment variable
+_see src/Env.hs_  
+We import `System.Environment` to read env variables from the machine running the API.  
+We declare a `Env` data record to hold our variables and a `initEnv` function to create it.
+Like that:
+``` haskell
+import System.Environment (getEnv)
+
+data Env = Env {
+    startingMessage :: Text
+    , apiPort :: Int
+    , databaseIp :: IPv4
+    , databaseTable :: Text
+} deriving (Show)
+
+initEnv :: IO Env
+initEnv = do
+    startingMessage <- pack <$> getEnv "STARTING_MESSAGE"
+    apiPort <- read <$> getEnv "API_PORT"
+    databaseIp <- read <$> getEnv "DATABASE_IP"
+    databaseTable <- pack <$> getEnv "DATABASE_TABLE"
+    pure Env{..}
+```
+
+
+### Make it accessible to your app
+
