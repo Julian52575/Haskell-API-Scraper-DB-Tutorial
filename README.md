@@ -68,6 +68,7 @@ We import `System.Environment` to read env variables from the machine running th
 We declare a `Env` data record to hold our variables and a `initEnv` function to create it.
 Like that:
 ``` haskell
+{-# LANGUAGE RecordWildCards #-}
 import System.Environment (getEnv)
 
 data Env = Env {
@@ -85,6 +86,9 @@ initEnv = do
     databaseTable <- pack <$> getEnv "DATABASE_TABLE"
     pure Env{..}
 ```
+> [!Tip]
+> We are using the `RecordWildCards` language extension to automatically pass each member of Env using `{..}` as they are defined in the function scope.
+
 ## Making it accessible to your app
 ###### _see [app/Main.hs](app/Main.hs) and [src/Env.hs](src/Env.hs)_  
   
