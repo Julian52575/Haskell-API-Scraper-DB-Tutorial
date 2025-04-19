@@ -10,10 +10,9 @@ import Data.Text (Text, unpack)
 import Data.Functor (void)
 import Control.Monad.Reader.Class (MonadReader, asks)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Trans.Reader (runReaderT, ReaderT)
-import Control.Monad.Trans (lift)
+import Control.Monad.Trans.Reader (runReaderT)
 
-import Env (Env, startingMessage, initEnvFromDotEnv)
+import Env (Env, startingMessage, initEnv)
 
 printMsgFromEnv :: (MonadReader Env m, MonadIO m) => m ()
 printMsgFromEnv = do
@@ -22,5 +21,5 @@ printMsgFromEnv = do
 
 main :: IO ()
 main = do
-  env <- initEnvFromDotEnv
+  env <- initEnv
   runReaderT printMsgFromEnv env

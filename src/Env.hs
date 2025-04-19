@@ -19,8 +19,8 @@ data Env = Env {
     , databaseTable :: Text
 } deriving (Show)
 
-initEnvFromDotEnv :: IO Env
-initEnvFromDotEnv = do
+initEnv :: IO Env
+initEnv = do
     startingMessage <- pack <$> getEnv "STARTING_MESSAGE"
     apiPort <- read <$> getEnv "API_PORT"
     databaseIp <- read <$> getEnv "DATABASE_IP"
