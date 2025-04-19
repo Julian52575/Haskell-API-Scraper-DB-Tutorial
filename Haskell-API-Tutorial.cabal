@@ -60,7 +60,10 @@ library
 
     -- Modules exported by the library.
     exposed-modules:
-        Env
+        Env,
+        Api.Api,
+        Api.Server,
+        Api.Routes.HelloWorld
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -76,8 +79,18 @@ library
         -- ^ Type IP
         exceptions,
         -- ^ MonadThrow, MonadCatch
-        transformers
+        transformers,
         -- ^ runReaderT
+        aeson,
+        -- ^ Aeson.FromJSON, Aeson.ToJSON
+        servant-server,
+        -- ^ Server types
+        wai,
+        -- ^ run
+        servant,
+        -- ^ Server.Api
+        unix-time
+        -- ^ Data.UnixTime
         
 
     -- Directories containing source files.
@@ -106,8 +119,12 @@ executable Haskell-API-Tutorial
         text,
         mtl,
         -- ^ MonadReader
-        transformers
+        transformers,
         -- ^ runReaderT
+        servant-server,
+        -- ^ Server
+        warp
+        -- ^ Proxy ?
 
     -- Directories containing source files.
     hs-source-dirs:   app
