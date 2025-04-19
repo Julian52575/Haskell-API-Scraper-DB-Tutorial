@@ -28,9 +28,11 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 
 ## What you will learn
 - [Reading environment variable](#Reading-environment-variable) and [making it accessible to your app](#Making-it-accessible-to-your-app) 
-- Creating a server to interact with your clients:
-  - [Setting up the server and our first route](#Setting-up-the-server).
-  - Replying to the client's request.
+- [Setting up the server](#Setting-up-the-server).
+  - [Creating our first route](#First-route)
+  - [Creating the API Type](#API-Type)
+  - [Applying a proxy](#Proxy)
+  - [Testing the API with Postman](#Testing-the-API-with-Postman)
   - Setting up the client authentication.
 - Querying a 3rd party API:
   - Sending a request.
@@ -137,7 +139,8 @@ To construct a `Wai` `Application`, Servant needs:
 To run an `Application`, Wai needs:
 - A port.
 
-Let's start with...
+Contrary to other language, we must first define the routes and then the `API` `type` before declaring the server.    
+So, let's start with...
 
 --- 
 ### First route 
@@ -193,13 +196,12 @@ helloWorldFunction = do
 > Notice that we are also using `{..}` from the `RecordWildCard` language extension again.  
 > It's very helpful !
 
----
 > Comming back to Servant's list:
 > - A `type` that transform all our routes into a singular `API` type.  
 > - ✅ Other `types` for each of our routes. _(we only have one)_  
 > - A proxy.
 
-Let's now create the...
+We can now create the...
 
 ---
 ### API Type
@@ -262,11 +264,14 @@ main = do
 
 Run `cabal build && cabal run` and your API should be working !  
 
-## Testing the API with Postman 
+### Testing the API with Postman 
 
 ![image](https://github.com/user-attachments/assets/eb53b71f-a0e6-4eea-826b-a6681b687899)
 
 🎉 If you see a json similar to that one, it means your API is working properly ! 🎉  
 🎉 Congratulation on creating your first route ! 🎉
+
+> [!TIP]
+> Postman is the easiest way to debug a api, and it's free.
 
 ---
