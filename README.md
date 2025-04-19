@@ -124,3 +124,6 @@ main = do
 > This is necessary beacuse `IO ()` is not supported by `runReaderT` but `MonadIO m => m ()` is. 
 
 ---
+## Setting up the server
+
+Add servant and wai to the cabal file and wait for the build to finish (might take a while)  
