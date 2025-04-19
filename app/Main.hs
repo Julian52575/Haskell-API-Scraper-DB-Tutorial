@@ -6,8 +6,7 @@
 --{-# LANGUAGE ScopedTypeVariables #-}  -- Typed variables
 module Main where
 
-import Data.Text (Text, unpack)
-import Data.Functor (void)
+import Data.Text (unpack)
 import Control.Monad.Reader.Class (MonadReader, asks)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Reader (runReaderT)
