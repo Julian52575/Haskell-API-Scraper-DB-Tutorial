@@ -31,7 +31,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 - [Setting up the server](#Setting-up-the-server).
   - [Creating our first route](#First-route)
   - [Creating the API Type](#API-Type)
-  - [Applying a proxy](#Proxy)
+  - [Creating the application](#Application)
   - [Testing the API with Postman](#Testing-the-API-with-Postman)
   - Setting up the client authentication.
 - Querying a 3rd party API:
@@ -142,7 +142,7 @@ To run an `Application`, Wai needs:
 Contrary to other language, we must first define the routes and then the `API` `type` before declaring the server.    
 So, let's start with...
 
---- 
+---
 ### First route 
 ###### see _[src/Api/Routes/HelloWorld.hs](src/Api/Routes/HelloWorld.hs)_.  
 
@@ -196,11 +196,6 @@ helloWorldFunction = do
 > Notice that we are also using `{..}` from the `RecordWildCard` language extension again.  
 > It's very helpful !
 
-> Comming back to Servant's list:
-> - A `type` that transform all our routes into a singular `API` type.  
-> - ✅ Other `types` for each of our routes. _(we only have one)_  
-> - A proxy.
-
 We can now create the...
 
 ---
@@ -219,10 +214,10 @@ type Api = Routes.HelloWorld
 and finish with the...
 
 ---
-### Proxy
+### Application
 ###### see _src/Api/Server.hs_.
 
-We declare a `server` function returning a `Server Api`. We then return our route's function.
+We declare a `server` function returning a `Server Api`. We then simply return our route's function.
 
 ``` Haskell
 import Data.Proxy 
