@@ -117,14 +117,15 @@ main = do
 ```
 > [!Tip]
 > Notice how `printMsgFromEnv` is of type `m ()` instead of `IO ()` even though we are calling `putStrLn`.  
-> This is made possible thanks to the constraint `MonadIO`.  
+> This is made possible thanks to the constraint `MonadIO`.
+> 
 > `MonadIO` warns about the same "side-effects" as `IO` but without altering the return type,   
 > `liftIO` then "translate" a `IO _` to a `MonadIO m => m _`.  
 > This is necessary beacuse `IO ()` is not supported by `runReaderT` but `MonadIO m => m ()` is. 
 
 ---
 ## Setting up the server
-###### see _src/Api/_ and _app/Main.hs_.  
+
 We are using [`Servant`](https://docs.servant.dev/en/stable/tutorial/install.html) to "create an abstract web app" _(quoted from Servant's doc)_,    
 and [`Wai`](https://hackage.haskell.org/package/wai) to serve it.
 
@@ -140,14 +141,25 @@ Let's start with...
 
 --- 
 ### First route 
-###### see _src/Api/Routes/HelloWorld.hs_.  
+###### see _[src/Api/Routes/HelloWorld.hs](src/Api/Routes/HelloWorld.hs)_.  
+
 Using the `TypeOperators` language extension and functions provided by `Servant`, we declare our `HelloWorld` route as a `type`.  
 
 This route, accessible at `"/hello-world"`, on `GET` request, will return a `JSON` body matching the type `HelloWorldResponse`. The `ToJSON` instance of `HelloWorldResponse` will allow `Servant` to convert the data record into a json the way we want.  
 
-We also declare the `helloWorldFunction` to handle request made on that route. _(Notice the usage of MonadIO for our UnixTime example)_.  
+We also declare the `helloWorldFunction` to handle request made on that route. 
 
 ``` Haskell
+{-# LANGUAGE NamedFieldPuns #-}
+-- ^ For HelloWorldResponse{message}
+{-# LANGUAGE RecordWildCards #-}
+-- ^ For HelloWorldResponse{..}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+-- ^ For type HelloWorld = "hello-world" :>
+{-# LANGUAGE OverloadedStrings #-}
+-- ^ For o .: String
+
 import Data.Aeson
 import Data.UnixTime (UnixTime, getUnixTime)
 import Servant ((:>), Get, JSON)
@@ -174,6 +186,87 @@ helloWorldFunction = do
     pure HelloWorldResponse{..}
 ```
 
+> [!Tip]
+> Notice that we are again using `MonadIO` and `liftIO` for our `UnixTime`.  
 
+> [!Tip]
+> Notice that we are also using `{..}` from the `RecordWildCard` language extension again.  
+> It's very helpful !
+
+---
+> Comming back to Servant's list:
+> - A `type` that transform all our routes into a singular `API` type.  
+> - ✅ Other `types` for each of our routes. _(we only have one)_  
+> - A proxy.
+
+Let's now create the...
+
+---
+### API Type
+###### see _src/Api/Api.hs_.  
+
+We simply declare the `API` `type` and assign our `HelloWorld` route.  
+
+``` Haskell
+import qualified Api.Routes.HelloWorld as Routes (HelloWorld)
+
+type Api = Routes.HelloWorld
+-- Add more endpoint using ":<|>"
+```
+
+and finish with the...
+
+---
+### Proxy
+###### see _src/Api/Server.hs_.
+
+We declare a `server` function returning a `Server Api`. We then return our route's function.
+
+``` Haskell
+import Data.Proxy 
+import qualified Servant (Server, serve)
+import qualified Network.Wai as Wai (Application)
+import Control.Monad.IO.Class (MonadIO)
+
+import Api.Api (Api)
+import qualified Api.Routes.HelloWorld as Routes (helloWorldFunction)
+
+server :: (MonadIO m) => m (Servant.Server Api)
+server = return Routes.helloWorldFunction
+-- Use Servant's ":<|>" operator to add other route's function. Make sure it matches the order set in the Api type.
+
+appM :: (MonadIO m) => m Wai.Application 
+appM = Servant.serve (Proxy :: Proxy Api) <$> server
+```
+> [!IMPORTANT]
+> All of these functions run under `MonadIO` _(and other constraints like `MonadReader Env` depending on your needs)_.  
+> No constraint are mandatory to run an api.  
+> `MonadIO` is included as a example of how to use constraints in your routes.      
+
+---
+
+Finally, we update `main` to run our `Application`:
+
+``` Haskell
+import Network.Wai.Handler.Warp (run)
+
+import Env (Env, startingMessage, initEnv)
+import Api.Server (appM)
+
+main :: IO ()
+main = do
+  env <- initEnv
+  app <- appM
+  run 8080 app
+```
+
+Run `cabal build && cabal run` and your API should be working !  
+
+## Testing the API with Postman 
+
+![image](https://github.com/user-attachments/assets/eb53b71f-a0e6-4eea-826b-a6681b687899)
+
+🎉 If you see a json similar to that one, it means your API is working properly ! 🎉  
+🎉 Congratulation on creating your first route ! 🎉
 
 ---
