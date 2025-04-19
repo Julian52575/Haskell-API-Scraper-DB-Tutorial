@@ -29,8 +29,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 ## What you will learn
 - [Reading environment variable](#Reading-environment-variable) and [making it accessible to your app](#Making-it-accessible-to-your-app) 
 - Creating a server to interact with your clients:
-  - Setting up the server.
-  - Setting up a route.
+  - [Setting up the server and our first route](#Setting-up-the-server).
   - Replying to the client's request.
   - Setting up the client authentication.
 - Querying a 3rd party API:
@@ -125,5 +124,56 @@ main = do
 
 ---
 ## Setting up the server
+###### see _src/Api/_ and _app/Main.hs_.  
+We are using [`Servant`](https://docs.servant.dev/en/stable/tutorial/install.html) to "create an abstract web app" _(quoted from Servant's doc)_,    
+and [`Wai`](https://hackage.haskell.org/package/wai) to serve it.
 
-Add servant and wai to the cabal file and wait for the build to finish (might take a while)  
+To construct a `Wai` `Application`, Servant needs:
+- A `type` that transform all our routes into a singular `API` type.  
+- Other `types` for each of our routes.  
+- A proxy.
+
+To run an `Application`, Wai needs:
+- A port.
+
+Let's start with...
+
+--- 
+### First route 
+###### see _src/Api/Routes/HelloWorld.hs_.  
+Using the `TypeOperators` language extension and functions provided by `Servant`, we declare our `HelloWorld` route as a `type`.  
+
+This route, accessible at `"/hello-world"`, on `GET` request, will return a `JSON` body matching the type `HelloWorldResponse`. The `ToJSON` instance of `HelloWorldResponse` will allow `Servant` to convert the data record into a json the way we want.  
+
+We also declare the `helloWorldFunction` to handle request made on that route. _(Notice the usage of MonadIO for our UnixTime example)_.  
+
+``` Haskell
+import Data.Aeson
+import Data.UnixTime (UnixTime, getUnixTime)
+import Servant ((:>), Get, JSON)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+
+type HelloWorld = "hello-world" :> Get '[JSON] HelloWorldResponse 
+
+data HelloWorldResponse = HelloWorldResponse {
+    message :: String,
+    time :: UnixTime
+} deriving (Show)
+
+instance ToJSON HelloWorldResponse where
+    toJSON HelloWorldResponse{message, time} = object
+        [
+            "message" .= message,
+            "time" .= utSeconds time
+        ]
+
+helloWorldFunction :: (MonadIO m) => m HelloWorldResponse
+helloWorldFunction = do
+    let message = "Hello World !"
+    time <- liftIO getUnixTime
+    pure HelloWorldResponse{..}
+```
+
+
+
+---
