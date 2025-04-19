@@ -59,7 +59,8 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  MyLib
+    exposed-modules:
+        Env
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -68,7 +69,16 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.17.2.1
+    build-depends:
+        base ^>=4.17.2.1,
+        text,
+        iproute,
+        -- ^ Type IP
+        exceptions,
+        -- ^ MonadThrow, MonadCatch
+        transformers
+        -- ^ runReaderT
+        
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -92,7 +102,12 @@ executable Haskell-API-Tutorial
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.2.1,
-        Haskell-API-Tutorial
+        Haskell-API-Tutorial,
+        text,
+        mtl,
+        -- ^ MonadReader
+        transformers
+        -- ^ runReaderT
 
     -- Directories containing source files.
     hs-source-dirs:   app
