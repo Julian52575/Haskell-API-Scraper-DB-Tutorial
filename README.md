@@ -52,6 +52,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 ├── Haskell-API-Tutorial.cabal  -- The project's configuration file
 ├── LICENSE
 ├── README.md
+├── .env         -- Environment variables needed for the app to run
 ├── src          -- Library source code
 │   └── MyLib.hs
 ├── test         -- Library tests
