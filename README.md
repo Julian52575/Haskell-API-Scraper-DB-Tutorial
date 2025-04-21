@@ -29,7 +29,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 ## What you will learn
 - [Reading environment variable](#Reading-environment-variable) and [making it accessible to your app](#Making-it-accessible-to-your-app) 
 - [Setting up the server](#Setting-up-the-server).
-  - [Creating our first route](#First-route)
+  - [Creating your first route](#First-route)
   - [Creating the API Type](#API-Type)
   - [Creating the application](#Application)
   - [Testing the API with Postman](#Testing-the-API-with-Postman)
@@ -50,13 +50,13 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 │   └── Main.hs
 |   └── ...     
 ├── CHANGELOG.md
-├── Haskell-API-Tutorial.cabal  -- The project's configuration file
+├── Haskell-API-Tutorial.cabal  -- The project's cabal configuration. Includes dependencies and such.
 ├── LICENSE
 ├── README.md
 ├── src          -- Library source code
-│   └── MyLib.hs
+│   └── ...
 ├── test         -- Library tests
-    └── Main.hs
+    └── ...
 └── ...
 ```
 ---
@@ -66,10 +66,12 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 ###### _see [src/Env.hs](src/Env.hs)_  
   
 We import `System.Environment` to read env variables from the machine running the API.  
-We declare a `Env` data record to hold our variables and a `initEnv` function to create it.
-Like that:
+We declare a `Env` data record to hold our variables and a `initEnv` function to create it.  
+That way:
 ``` haskell
 {-# LANGUAGE RecordWildCards #-}
+
+module Env where
 import System.Environment (getEnv)
 
 data Env = Env {
@@ -93,10 +95,11 @@ initEnv = do
 ## Making it accessible to your app
 ###### _see [app/Main.hs](app/Main.hs) and [src/Env.hs](src/Env.hs)_  
   
-We create a instance of `Env` using `initEnv` and pass it to our function inside a `MonadReader` thanks to `runReaderT`.  
-`printMsgFromEnv` can query the `startingMessage` field of the data record `Env`.  
+We create an instance of `Env` using `initEnv` and pass it to our function inside a `MonadReader` thanks to `runReaderT`.  
+`printMsgFromEnv` can then query the `startingMessage` field by using `asks`.  
     
 **Why `MonadReader` instead of passing `Env` as a parameter ?**  
+
 `MonadReader` acts as an environment of its own, holding our `Env` record.  
 If `printMsgFromEnv` were to call `another` function that has the `MonadReader Env` constraint, `another` would have access to `Env` the same way without having to pass the parameter again.
 
@@ -118,39 +121,31 @@ main = do
   runReaderT printMsgFromEnv env
 ```
 > [!Tip]
-> Notice how `printMsgFromEnv` is of type `m ()` instead of `IO ()` even though we are calling `putStrLn`.  
+> Notice how `printMsgFromEnv` is of type `m ()` instead of `m (IO ())` even though we are calling `putStrLn`.  
 > This is made possible thanks to the constraint `MonadIO`.
 > 
-> `MonadIO` warns about the same "side-effects" as `IO` but without altering the return type,   
+> `MonadIO` warns about the same _"side-effects"_ as `IO` but without altering the return type,   
 > `liftIO` then "translate" a `IO _` to a `MonadIO m => m _`.  
 > This is necessary beacuse `IO ()` is not supported by `runReaderT` but `MonadIO m => m ()` is. 
 
 ---
 ## Setting up the server
 
-We are using [`Servant`](https://docs.servant.dev/en/stable/tutorial/install.html) to "create an abstract web app" _(quoted from Servant's doc)_,    
-and [`Wai`](https://hackage.haskell.org/package/wai) to serve it.
+We are using [`Servant`](https://docs.servant.dev/en/stable/tutorial/install.html) to _"create an abstract web app" (quoted from Servant's doc)_, and [`Wai`](https://hackage.haskell.org/package/wai) to serve it.
 
-To construct a `Wai` `Application`, Servant needs:
-- A `type` that transform all our routes into a singular `API` type.  
-- Other `types` for each of our routes.  
-- A proxy.
-
-To run an `Application`, Wai needs:
-- A port.
-
-Contrary to other language, we must first define the routes and then the `API` `type` before declaring the server.    
+To construct an `Application` that `Wai` can serve, `Servant` needs a `type` that defines all our routes.  
 So, let's start with...
 
 ---
 ### First route 
 ###### see _[src/Api/Routes/HelloWorld.hs](src/Api/Routes/HelloWorld.hs)_.  
 
-Using the `TypeOperators` language extension and functions provided by `Servant`, we declare our `HelloWorld` route as a `type`.  
+Using functions provided by `Servant`, we declare our `HelloWorld` route as a `type`.  
 
-This route, accessible at `"/hello-world"`, on `GET` request, will return a `JSON` body matching the type `HelloWorldResponse`. The `ToJSON` instance of `HelloWorldResponse` will allow `Servant` to convert the data record into a json the way we want.  
+This route, accessible at `"/hello-world"`, on `GET` request, will return a `JSON` body matching the type `HelloWorldResponse`.  
+The `ToJSON` instance of `HelloWorldResponse` will allow `Servant` to convert the data record into a json the way we want.  
 
-We also declare the `helloWorldFunction` to handle request made on that route. 
+We also declare the `helloWorldFunction` to handle requests made on that route. 
 
 ``` Haskell
 {-# LANGUAGE NamedFieldPuns #-}
@@ -162,6 +157,8 @@ We also declare the `helloWorldFunction` to handle request made on that route.
 -- ^ For type HelloWorld = "hello-world" :>
 {-# LANGUAGE OverloadedStrings #-}
 -- ^ For o .: String
+
+module Api.Routes.HelloWorld where
 
 import Data.Aeson
 import Data.UnixTime (UnixTime, getUnixTime)
@@ -205,19 +202,20 @@ We can now create the...
 We simply declare the `API` `type` and assign our `HelloWorld` route.  
 
 ``` Haskell
+module Api.Api where 
 import qualified Api.Routes.HelloWorld as Routes (HelloWorld)
 
 type Api = Routes.HelloWorld
 -- Add more endpoint using ":<|>"
 ```
 
-and finish with the...
+Now, we can use that type to create the `Application` and the server:
 
 ---
 ### Application
 ###### see _src/Api/Server.hs_.
 
-We declare a `server` function returning a `Server Api`. We then simply return our route's function.
+We declare a `server` function of type `Server Api`. We then simply return our route's function.
 
 ``` Haskell
 import Data.Proxy 
@@ -231,6 +229,8 @@ import qualified Api.Routes.HelloWorld as Routes (helloWorldFunction)
 server :: (MonadIO m) => m (Servant.Server Api)
 server = return Routes.helloWorldFunction
 -- Use Servant's ":<|>" operator to add other route's function. Make sure it matches the order set in the Api type.
+-- Like so:
+--      :  <|> Routes.NuclearBombLauncher
 
 appM :: (MonadIO m) => m Wai.Application 
 appM = Servant.serve (Proxy :: Proxy Api) <$> server
@@ -254,7 +254,7 @@ main :: IO ()
 main = do
   env <- initEnv
   app <- appM
-  run 8080 app
+  runReaderT (liftIO $ run 8080 app) env
 ```
 
 Run `cabal build && cabal run` and your API should be working !  
