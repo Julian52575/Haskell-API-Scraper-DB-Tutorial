@@ -27,6 +27,8 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
 > `Postman` will help you test your routes !
 
 ## What you will learn
+- Set up the Haskell Language Server  
+- Using Debug.Trace to debug print  
 - [Reading environment variable](#Reading-environment-variable) and [making it accessible to your app](#Making-it-accessible-to-your-app) 
 - [Setting up the server](#Setting-up-the-server).
   - [Creating your first route](#First-route)
