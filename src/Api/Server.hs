@@ -5,17 +5,27 @@
 module Api.Server where
 
 import Data.Proxy 
-import Servant (Server, serve, (:<|>)(..), Context((:.)), Context(EmptyContext))
-import Servant.Auth.Server (JWTSettings (JWTSettings), generateKey, defaultJWTSettings, defaultCookieSettings)
+import Servant (Server, serve, (:<|>)(..), Context((:.)), Context(EmptyContext), err401)
+import Servant.Auth.Server (JWTSettings (JWTSettings), generateKey, defaultJWTSettings, defaultCookieSettings, AuthResult (Authenticated), ThrowAll (throwAll))
 import Network.Wai (Application)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
-import Api.Api (Api)
+import Api.Api (Api, ProtectedApi, ProtectedRoutes)
 import Api.Routes.HelloWorld as Routes (helloWorldFunction)
 import Api.Routes.Login as Routes (loginFunction)
+import Api.Routes.Secret as Routes (secretFunction)
+import Api.Routes.Secret2 as Routes (secretFunction2)
+import Api.JWTPayload (JWTPayload)
 
 server :: (MonadIO m) => JWTSettings -> m (Server Api)
-server jwt = return $ Routes.helloWorldFunction :<|> Routes.loginFunction jwt
+server jwt = return $
+        Routes.helloWorldFunction
+    :<|> Routes.loginFunction jwt
+    -- Routes.secretFunction
+
+protectedServer :: AuthResult JWTPayload -> Server ProtectedRoutes
+protectedServer (Authenticated payload) = Routes.secretFunction payload :<|> Routes.secretFunction2
+protectedServer _ = throwAll err401
 
 appM :: (MonadIO m) => m Application 
 appM = do

@@ -65,7 +65,9 @@ library
         Api.JWTPayload,
         Api.Server,
         Api.Routes.HelloWorld,
-        Api.Routes.Login
+        Api.Routes.Login,
+        Api.Routes.Secret,
+        Api.Routes.Secret2
 
     -- Modules included in this library but not exported.
     -- other-modules:
