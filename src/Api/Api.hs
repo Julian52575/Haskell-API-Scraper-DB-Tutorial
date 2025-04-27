@@ -18,9 +18,12 @@ import qualified Api.Routes.Login as Routes (Login)
 import qualified Api.Routes.Secret as Routes (Secret)
 import qualified Api.Routes.Secret2 as Routes (Secret2)
 
-type Api = 
+type PublicRoutes = 
         Routes.HelloWorld
     :<|> Routes.Login
+type PublicApi = PublicRoutes
 
 type ProtectedRoutes = Routes.Secret :<|> Routes.Secret2
 type ProtectedApi = Auth '[JSON] JWTPayload :> ProtectedRoutes
+
+type Api = ProtectedRoutes :<|> PublicRoutes
