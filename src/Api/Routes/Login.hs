@@ -23,12 +23,14 @@ import qualified Data.Aeson as Aeson
 import GHC.Generics
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
-import Servant ((:>), JSON, ReqBody, Post, throwError, err500, Handler)
-import Servant.Auth.Server (makeJWT, JWTSettings, AuthResult)
+import Servant ((:>), JSON, ReqBody, Post, throwError, err500, Handler, Header, Headers, err401, NoContent(..))
+import Servant.Auth.Server (makeJWT, JWTSettings, AuthResult, SetCookie, acceptLogin, defaultCookieSettings)
 
 import Api.JWTPayload
 
-type Login = "login" :> ReqBody '[JSON] LoginBody :> Post '[JSON] TokenResponse
+type Login = "login"
+            :> ReqBody '[JSON] LoginBody
+            :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent)
 
 data TokenResponse = TokenResponse {
     token :: Text
@@ -41,10 +43,12 @@ data LoginBody = LoginBody {
 } deriving (Generic)
 instance Aeson.FromJSON LoginBody
 
-loginFunction :: JWTSettings -> LoginBody -> Handler TokenResponse
+loginFunction :: JWTSettings -> LoginBody -> Handler (Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent)
 loginFunction jwtCfg (LoginBody name _password) = do
-  let user = JWTPayload { userName = name }
-  mToken <- liftIO $ makeJWT user jwtCfg Nothing
-  case mToken of
-    Left _ -> throwError err500
-    Right tokenBS -> return $ TokenResponse (decodeUtf8 $ toStrict tokenBS)
+  let payload = JWTPayload { userName = name }
+  loginAcceptMaybe <- liftIO $ acceptLogin defaultCookieSettings jwtCfg payload
+  case loginAcceptMaybe of
+    Nothing -> throwError err401
+    Just responseToCookieFun -> do
+      let response = NoContent
+      return $ responseToCookieFun response

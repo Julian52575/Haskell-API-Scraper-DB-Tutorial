@@ -24,6 +24,6 @@ type PublicRoutes =
 type PublicApi = PublicRoutes
 
 type ProtectedRoutes = Routes.Secret :<|> Routes.Secret2
-type ProtectedApi = Auth '[JSON] JWTPayload :> ProtectedRoutes
+type ProtectedApi authFormat = Auth authFormat JWTPayload :> ProtectedRoutes
 
-type Api = ProtectedRoutes :<|> PublicRoutes
+type Api authFormat = ProtectedApi authFormat :<|> PublicApi

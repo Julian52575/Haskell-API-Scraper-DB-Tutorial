@@ -29,6 +29,7 @@ type Secret = "secret" :> Get '[JSON] SecretResponse
 data SecretResponse = SecretResponse {
     secret :: Text
 } deriving (Generic)
+instance ToJSON SecretResponse
 
 secretFunction :: JWTPayload -> Handler SecretResponse
 secretFunction JWTPayload{userName} = pure $ SecretResponse{secret = pack $ "Congratulation " ++ unpack userName ++ " on accessing the secret route!"}

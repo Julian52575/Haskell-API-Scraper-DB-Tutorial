@@ -29,6 +29,7 @@ type Secret2 = "secret2" :> Get '[JSON] SecretResponse2
 data SecretResponse2 = SecretResponse2 {
     secret :: Text
 } deriving (Generic)
+instance ToJSON SecretResponse2
 
 secretFunction2 :: Handler SecretResponse2
 secretFunction2 = pure $ SecretResponse2{secret = pack "Congratulation on accessing the 2nd secret route!"}
