@@ -15,7 +15,7 @@ import Api.Routes.HelloWorld as Routes (helloWorldFunction)
 import Api.Routes.Login as Routes (loginFunction)
 
 server :: (MonadIO m) => JWTSettings -> m (Server Api)
-server jwt = return $ Routes.helloWorldFunction :<|> \idk -> Routes.loginFunction jwt idk
+server jwt = return $ Routes.helloWorldFunction :<|> Routes.loginFunction jwt
 
 appM :: (MonadIO m) => m Application 
 appM = do
