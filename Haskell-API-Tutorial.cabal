@@ -64,6 +64,7 @@ library
         Api.Api,
         Api.JWTPayload,
         Api.Server,
+        Api.Auth,
         Api.Routes.HelloWorld,
         Api.Routes.Login,
         Api.Routes.Secret,

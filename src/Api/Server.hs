@@ -19,10 +19,11 @@ import Api.Routes.Login as Routes (loginFunction)
 import Api.Routes.Secret as Routes (secretFunction)
 import Api.Routes.Secret2 as Routes (secretFunction2)
 import Api.JWTPayload (JWTPayload)
+import Api.Auth (cookieAuthHandler)
 
-protectedServer :: AuthResult JWTPayload -> Server ProtectedRoutes
-protectedServer (Authenticated payload) = Routes.secretFunction payload :<|> Routes.secretFunction2
-protectedServer _ = throwAll err401
+protectedServer :: JWTPayload -> Server ProtectedRoutes
+protectedServer payload = Routes.secretFunction payload :<|> Routes.secretFunction2
+--protectedServer _ = throwAll err401
 
 server :: JWTSettings -> Server PublicRoutes
 server jwt = Routes.helloWorldFunction
@@ -34,5 +35,5 @@ appM = do
     myKey <- liftIO generateKey -- random key at runtime
     let jwtCfg = defaultJWTSettings myKey
         cookieCfg = defaultCookieSettings -- unused but required by some auth functions
-        context = cookieCfg :. jwtCfg :. EmptyContext
-    pure $ serveWithContext (Proxy :: Proxy (Api '[JWT, Cookie])) context (protectedServer :<|> server jwtCfg)
+        context = cookieAuthHandler jwtCfg :. cookieCfg :. jwtCfg :. EmptyContext
+    pure $ serveWithContext (Proxy :: Proxy Api) context (protectedServer :<|> server jwtCfg)
