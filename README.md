@@ -35,7 +35,7 @@ Haskell is both fast and very-reliable, making it perfect for web services such 
   - [Creating the API Type](#API-Type)
   - [Creating the application](#Application)
   - [Testing the API with Postman](#Testing-the-API-with-Postman)
-  - Setting up the client authentication.
+  - [Setting up the client authentication using JWT](#Setting-up-the-client-authentication-using-JWT).
 - Querying a 3rd party API:
   - Sending a request.
   - Handle the response and status code.
@@ -138,7 +138,6 @@ We are using [`Servant`](https://docs.servant.dev/en/stable/tutorial/install.htm
 To construct an `Application` that `Wai` can serve, `Servant` needs a `type` that defines all our routes.  
 So, let's start with...
 
----
 ### First route 
 ###### see _[src/Api/Routes/HelloWorld.hs](src/Api/Routes/HelloWorld.hs)_.  
 
@@ -197,7 +196,6 @@ helloWorldFunction = do
 
 We can now create the...
 
----
 ### API Type
 ###### see _src/Api/Api.hs_.  
 
@@ -213,7 +211,6 @@ type Api = Routes.HelloWorld
 
 Now, we can use that type to create the `Application` and the server:
 
----
 ### Application
 ###### see _src/Api/Server.hs_.
 
@@ -242,7 +239,6 @@ appM = Servant.serve (Proxy :: Proxy Api) <$> server
 > No constraint are mandatory to run an api.  
 > `MonadIO` is included as a example of how to use constraints in your routes.      
 
----
 
 Finally, we update `main` to run our `Application`:
 
@@ -269,6 +265,26 @@ Run `cabal build && cabal run` and your API should be working !
 🎉 Congratulation on creating your first route ! 🎉
 
 > [!TIP]
-> Postman is the easiest way to debug a api, and it's free.
+> Postman is the easiest way to debug an api, and it's free.
 
 ---
+
+## Setting up the client authentication using JWT 
+
+> [!NOTE]
+> Understanding [Json Web Token](https://en.wikipedia.org/wiki/JSON_Web_Token) would be helpful.  
+> In short: a JWT stores one of your user's encrypted data.  
+> Verifying this token allows the API to understand which user is issuing a request.
+
+> [!TIP]
+> Postman will be very helpful here.
+
+> [!IMPORTANT]
+> We wil rework most of what we have done to make the code cleaner.  
+> Consider the previous steps as a basic introduction to Servant.
+
+1. Create a `login` route to generate a JWT for your user
+2. Create a protected route that requires this JWT to access
+3. Update the Api type
+4. Update the server and application
+
