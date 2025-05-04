@@ -12,6 +12,7 @@ import Servant (Server, serve, (:<|>)(..), Context((:.)), Context(EmptyContext),
 import Servant.Auth.Server (JWT, JWTSettings (JWTSettings), generateKey, defaultJWTSettings, defaultCookieSettings, AuthResult (Authenticated), ThrowAll (throwAll), Cookie)
 import Network.Wai (Application)
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.RWS (MonadReader (ask))
 
 import Api.Api (Api, ProtectedApi, ProtectedRoutes, PublicRoutes, PublicApi)
 import Api.Routes.HelloWorld as Routes (helloWorldFunction)
@@ -29,11 +30,12 @@ server :: JWTSettings -> Server PublicRoutes
 server jwt = Routes.helloWorldFunction
     :<|> Routes.loginFunction jwt
 
-appM :: (MonadIO m) => m Application 
+appM :: (MonadIO m, MonadReader r m) => m Application 
 appM = do
     -- Generate JWT settings
+    env <- ask
     myKey <- liftIO generateKey -- random key at runtime
     let jwtCfg = defaultJWTSettings myKey
         cookieCfg = defaultCookieSettings -- unused but required by some auth functions
-        context = cookieAuthHandler jwtCfg :. cookieCfg :. jwtCfg :. EmptyContext
+        context = cookieAuthHandler env jwtCfg :. cookieCfg :. jwtCfg :. EmptyContext
     pure $ serveWithContext (Proxy :: Proxy Api) context (protectedServer :<|> server jwtCfg)

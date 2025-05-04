@@ -102,6 +102,9 @@ library
         servant-auth,
         servant-auth-server,
         -- ^ Server authentification
+        http-types,
+        cookie
+        -- ^ Types related to http requests
         
 
     -- Directories containing source files.
