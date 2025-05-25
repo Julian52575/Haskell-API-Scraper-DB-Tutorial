@@ -290,8 +290,27 @@ Here are the steps we will folow:
 3. Update the Api type
 4. Update the server and application
 
+### Creating a type for our JWT  
+###### _see [Login.hs](https://github.com/Julian52575/Haskell-Servant-API-Tutorial/blob/5-server/src/Api/JWTPayload.hs)_  
+
+Any type will do, as long as it implement instances of `FromJSON`, `ToJSON`, `FromJWT` and `ToJWT`.  
+``` haskell
+data JWTPayload = JWTPayload {
+    userName :: Text
+} deriving (Eq, Show, Generic)
+
+instance Aeson.FromJSON         JWTPayload
+instance Aeson.ToJSON           JWTPayload
+instance Servant.Auth.FromJWT   JWTPayload
+instance Servant.Auth.ToJWT     JWTPayload
+```
+This example type will only share the user name between our API and our client.  
+
+> [!TIP]
+> If you don't understand why we call the type `Payload`, maybe you should learn about JWT
+
 ### Creating a login route to generate our client's JWT
-###### _see [Login.hs](#src/Api/Routes/Login.hs]_  
+###### _see [Login.hs](https://github.com/Julian52575/Haskell-Servant-API-Tutorial/blob/5-server/src/Api/Routes/Login.hs)_  
 
 Let's first declare our route type:  
 ``` haskell
@@ -335,7 +354,19 @@ Notice the return type ```Headers '[Header "Set-Cookie" SetCookie, Header "Set-C
 it means we will return a `NoContent` **AND** set 2 cookies (`[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie]`).  
 How do we do that ?
 - We'll return `NoContent`.
-- Let Servant's [acceptLogin](#https://hackage.haskell.org/package/servant-auth-server-0.4.9.0/docs/Servant-Auth-Server.html#v:acceptLogin) manage the cookies !
-
-
-
+- Let Servant's [acceptLogin](https://hackage.haskell.org/package/servant-auth-server-0.4.9.0/docs/Servant-Auth-Server.html#v:acceptLogin) manage the cookies !  
+acceptLogin takes 3 arguments: a `JWTSettings`, a `CookieSettings` and `session`, which is whatever type we want to encrypt within our JWT.     
+It returns a `IO (Maybe (response -> withTwoCookies))`, which bind whatever our `response` type is to a `response` with two cookies.  
+Now that you understand our operations, here is the login function:  
+``` haskell
+loginFunction :: JWTSettings -> LoginBody -> Handler (Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent)
+loginFunction jwtCfg (LoginBody name _password) = do
+  let payload = JWTPayload { userName = name }
+  loginAcceptMaybe <- liftIO $ acceptLogin defaultCookieSettings jwtCfg payload
+  case loginAcceptMaybe of
+    Nothing -> throwError err401
+    Just responseToCookieFun -> do
+      let response = NoContent
+      return $ responseToCookieFun response
+```
+We parse the LoginBody to a JWTPayload that will be encoded and stored within the cookies that `acceptLogin` will return.  
