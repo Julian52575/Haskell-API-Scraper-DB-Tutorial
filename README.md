@@ -272,9 +272,9 @@ Run `cabal build && cabal run` and your API should be working !
 ## Setting up the client authentication using JWT 
 
 > [!NOTE]
-> Understanding [Json Web Token](https://en.wikipedia.org/wiki/JSON_Web_Token) would be helpful.  
+> Understanding [Json Web Token (JWT)](https://en.wikipedia.org/wiki/JSON_Web_Token) would be helpful.  
 > In short: a JWT stores one of your user's encrypted data.  
-> Verifying this token allows the API to understand which user is issuing a request.
+> Verifying this token allows the API to understand which user is issuing a request and if it loged in previously.
 
 > [!TIP]
 > Postman will be very helpful here.
@@ -282,9 +282,60 @@ Run `cabal build && cabal run` and your API should be working !
 > [!IMPORTANT]
 > We wil rework most of what we have done to make the code cleaner.  
 > Consider the previous steps as a basic introduction to Servant.
+> Finally, our API will set the JWT inside a Cookie. 
 
+Here are the steps we will folow:  
 1. Create a `login` route to generate a JWT for your user
 2. Create a protected route that requires this JWT to access
 3. Update the Api type
 4. Update the server and application
+
+### Creating a login route to generate our client's JWT
+###### _see [Login.hs](#src/Api/Routes/Login.hs]_  
+
+Let's first declare our route type:  
+``` haskell
+{-# LANGUAGE DeriveGeneric #-}
+-- ^ For TokenResponse.deriving Generic
+{-# LANGUAGE NamedFieldPuns #-}
+-- ^ For HelloWorldResponse{message}
+{-# LANGUAGE RecordWildCards #-}
+-- ^ For HelloWorldResponse{..}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
+-- ^ For type HelloWorld = "hello-world" :>
+{-# LANGUAGE OverloadedStrings #-}
+-- ^ For o .: String
+
+module Api.Routes.Login where
+import Servant ((:>), JSON, ReqBody, Post, throwError, err500, Handler, Header, Headers, err401, NoContent(..))
+import Servant.Auth.Server (makeJWT, JWTSettings, AuthResult, SetCookie, acceptLogin, defaultCookieSettings)
+
+data LoginBody = LoginBody {
+    loginName :: Text,
+    loginPassword :: Text
+} deriving (Generic)
+instance Aeson.FromJSON LoginBody
+
+type Login = "login"
+            :> ReqBody '[JSON] LoginBody
+            :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent)
+```
+You should understand what the `LoginBody` does, but in case you don't, it's the json object that needs to be passed inside a request.  
+We define a default instance _(`instance Aeson.FromJSON LoginBody`)_, so the json keys will match the record names.  
+Here is an example of the json object:  
+```json
+{
+  "loginName" : "Rulian",
+  "loginPassword" : "IluvHaskell"
+}
+```
+Now, back to the route type:  
+Notice the return type ```Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] NoContent```,  
+it means we will return a `NoContent` **AND** set 2 cookies (`[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie]`).  
+How do we do that ?
+- We'll return `NoContent`.
+- Let Servant's [acceptLogin](#https://hackage.haskell.org/package/servant-auth-server-0.4.9.0/docs/Servant-Auth-Server.html#v:acceptLogin) manage the cookies !
+
+
 
